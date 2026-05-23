@@ -42,6 +42,9 @@ const DEFAULTS = {
   seguroVida: 12,
   tcLimite: 19200,
   tcGastado: 0,
+  ethInvertidoUSD: 130,
+  ethValorActualUSD: 130,
+  tipoCambio: 7.72,
 };
 
 const LABELS = {
@@ -62,6 +65,9 @@ const LABELS = {
   seguroVida: "Descuento seguro de vida",
   tcLimite: "Tarjeta de Crédito — Límite",
   tcGastado: "Tarjeta de Crédito — Gastado este mes",
+  ethInvertidoUSD: "Ethereum — Capital invertido (USD)",
+  ethValorActualUSD: "Ethereum — Valor actual esta semana (USD)",
+  tipoCambio: "Tipo de cambio USD → GTQ",
 };
 
 const GROUPS = {
@@ -70,6 +76,7 @@ const GROUPS = {
   "Activos": ["carroValor","casaValor","deudaCasa","deudaCasaOriginal"],
   "Ingresos": ["salario","rentaIngreso"],
   "Egresos fijos": ["abonoCasa","ahorroMensual","aporteDorado","seguroVida"],
+  "💰 Cripto": ["ethInvertidoUSD","ethValorActualUSD","tipoCambio"],
 };
 
 const storage = {
@@ -130,8 +137,15 @@ export default function App() {
   const tcUsoPct = data.tcLimite > 0 ? (data.tcGastado / data.tcLimite) * 100 : 0;
   const tcDisponible = data.tcLimite - data.tcGastado;
   const cajaNeta = totalCajaBruta - data.tcGastado;
+  // Cripto
+  const USD = (n) => `$${Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const ethGananciaUSD = data.ethValorActualUSD - data.ethInvertidoUSD;
+  const ethGananciaPct = data.ethInvertidoUSD > 0 ? (ethGananciaUSD / data.ethInvertidoUSD) * 100 : 0;
+  const ethValorGTQ = data.ethValorActualUSD * data.tipoCambio;
+  const ethInvertidoGTQ = data.ethInvertidoUSD * data.tipoCambio;
+  const ethGananciaGTQ = ethGananciaUSD * data.tipoCambio;
   const equidadCasa = data.casaValor - data.deudaCasa;
-  const patrimonioNeto = totalCajaBruta + data.carroValor + equidadCasa - data.tcGastado;
+  const patrimonioNeto = totalCajaBruta + data.carroValor + equidadCasa - data.tcGastado + ethValorGTQ;
   const roiCasa = data.casaValor > 0 ? ((data.rentaIngreso * 12) / data.casaValor) * 100 : 0;
   const flujoNeto = data.rentaIngreso - data.abonoCasa;
   const totalIngresos = data.salario + data.rentaIngreso;
@@ -156,7 +170,7 @@ export default function App() {
     });
   }, [history]);
 
-  const tabs = [["resumen","Resumen"],["liquidez","Liquidez"],["activos","Activos"],["flujo","Flujo"],["historial","Historial"]];
+  const tabs = [["resumen","Resumen"],["liquidez","Liquidez"],["activos","Activos"],["cripto","Cripto"],["flujo","Flujo"],["historial","Historial"]];
   const tcColor = tcUsoPct > 70 ? C.red : tcUsoPct > 40 ? C.orange : C.green;
 
   // Grid helpers
@@ -329,6 +343,87 @@ export default function App() {
                 ))}
               </div>
             </Card>
+
+            {/* CRYPTO CARD */}
+            <div style={{
+              background: "linear-gradient(135deg, #0a0a1a 0%, #0d1b3e 50%, #0a1628 100%)",
+              border: "1px solid rgba(99,179,237,0.3)",
+              borderRadius: 12,
+              padding: "20px",
+              position: "relative",
+              overflow: "hidden",
+              boxShadow: "0 4px 24px rgba(66,153,225,0.15)",
+            }}>
+              {/* Glow rings decorativos */}
+              <div style={{ position:"absolute", top:"50%", left: isMobile ? 120 : 160, transform:"translate(-50%,-50%)", width: isMobile ? 160 : 200, height: isMobile ? 160 : 200, borderRadius:"50%", border:"1px solid rgba(99,179,237,0.15)", pointerEvents:"none" }} />
+              <div style={{ position:"absolute", top:"50%", left: isMobile ? 120 : 160, transform:"translate(-50%,-50%)", width: isMobile ? 110 : 140, height: isMobile ? 110 : 140, borderRadius:"50%", border:"1px solid rgba(99,179,237,0.2)", pointerEvents:"none" }} />
+              <div style={{ position:"absolute", top:"50%", left: isMobile ? 120 : 160, transform:"translate(-50%,-50%)", width: isMobile ? 60 : 80, height: isMobile ? 60 : 80, borderRadius:"50%", border:"1px solid rgba(99,179,237,0.3)", pointerEvents:"none" }} />
+
+              {/* ETH diamond shape */}
+              <div style={{ position:"absolute", top:"50%", left: isMobile ? 120 : 160, transform:"translate(-50%,-50%)", pointerEvents:"none" }}>
+                <svg width={isMobile ? 48 : 60} height={isMobile ? 56 : 70} viewBox="0 0 60 70">
+                  <defs>
+                    <linearGradient id="ethGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#63b3ed" />
+                      <stop offset="50%" stopColor="#7c3aed" />
+                      <stop offset="100%" stopColor="#3b82f6" />
+                    </linearGradient>
+                    <filter id="glow">
+                      <feGaussianBlur stdDeviation="2" result="blur" />
+                      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                  </defs>
+                  <polygon points="30,2 58,28 30,38 2,28" fill="url(#ethGrad)" filter="url(#glow)" opacity="0.95" />
+                  <polygon points="30,38 58,28 30,68" fill="#3b82f6" filter="url(#glow)" opacity="0.8" />
+                  <polygon points="30,38 2,28 30,68" fill="#1e40af" filter="url(#glow)" opacity="0.9" />
+                  <polygon points="30,2 30,38 2,28" fill="#60a5fa" opacity="0.6" />
+                </svg>
+              </div>
+
+              {/* Content */}
+              <div style={{ marginLeft: isMobile ? 160 : 210 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
+                  <span style={{ fontSize:11, fontWeight:700, color:"rgba(99,179,237,0.8)", letterSpacing:"2px", textTransform:"uppercase" }}>⟠ Ethereum</span>
+                  <div style={{ flex:1, height:1, background:"rgba(99,179,237,0.2)" }} />
+                  <span style={{ fontSize:10, color:"rgba(99,179,237,0.5)", letterSpacing:"1px" }}>CRIPTO</span>
+                </div>
+
+                <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(3,1fr)", gap:10 }}>
+                  <div>
+                    <div style={{ fontSize:10, color:"rgba(150,200,255,0.5)", marginBottom:3 }}>Valor actual</div>
+                    <div style={{ fontSize: isMobile ? 16 : 20, fontWeight:800, color:"#63b3ed" }}>${data.ethValorActualUSD.toFixed(0)}</div>
+                    <div style={{ fontSize:11, color:"rgba(150,200,255,0.6)", marginTop:1 }}>{Q(ethValorGTQ)}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize:10, color:"rgba(150,200,255,0.5)", marginBottom:3 }}>Invertido</div>
+                    <div style={{ fontSize: isMobile ? 14 : 16, fontWeight:700, color:"rgba(150,200,255,0.8)" }}>${data.ethInvertidoUSD.toFixed(0)}</div>
+                    <div style={{ fontSize:11, color:"rgba(150,200,255,0.5)", marginTop:1 }}>{Q(ethInvertidoGTQ)}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize:10, color:"rgba(150,200,255,0.5)", marginBottom:3 }}>
+                      {ethGananciaPct >= 0 ? "Ganancia" : "Pérdida"}
+                    </div>
+                    <div style={{ fontSize: isMobile ? 14 : 16, fontWeight:800, color: ethGananciaPct >= 0 ? "#4ade80" : "#f87171" }}>
+                      {ethGananciaPct >= 0 ? "+" : ""}{ethGananciaPct.toFixed(1)}%
+                    </div>
+                    <div style={{ fontSize:11, color: ethGananciaPct >= 0 ? "#4ade80" : "#f87171", marginTop:1 }}>
+                      {ethGananciaPct >= 0 ? "+" : ""}${ethGananciaUSD.toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mini barra */}
+                <div style={{ marginTop:12 }}>
+                  <div style={{ height:4, background:"rgba(99,179,237,0.1)", borderRadius:2 }}>
+                    <div style={{ width:`${Math.min(100, Math.max(5, (data.ethValorActualUSD / (data.ethInvertidoUSD * 1.5)) * 100))}%`, height:"100%", background: ethGananciaPct >= 0 ? "linear-gradient(90deg,#3b82f6,#4ade80)" : "linear-gradient(90deg,#3b82f6,#f87171)", borderRadius:2, boxShadow: ethGananciaPct >= 0 ? "0 0 6px #4ade8088" : "0 0 6px #f8717188", transition:"width 0.5s" }} />
+                  </div>
+                  <div style={{ fontSize:10, color:"rgba(150,200,255,0.4)", marginTop:4, textAlign:"right" }}>
+                    TC: Q{data.tipoCambio} por $1
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
 
@@ -423,6 +518,60 @@ export default function App() {
                 <PBar value={data.deudaCasaOriginal - data.deudaCasa} total={data.deudaCasaOriginal} color={C.blueAcct} label={`${deudaPagadaPct.toFixed(1)}% pagado — Q${data.abonoCasa.toLocaleString()}/mes`} />
               </div>
             </Card>
+          </div>
+        )}
+
+
+        {/* ── CRIPTO ── */}
+        {tab === "cripto" && (
+          <div style={{ display: "grid", gap: 14 }}>
+            {/* Header card */}
+            <Card title="Ethereum (ETH)" icon="⟠" accent={ethGananciaPct >= 0 ? C.green : C.red}>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)", gap: 12, marginBottom: 16 }}>
+                <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px" }}>
+                  <div style={{ fontSize: 10, color: C.slateL, marginBottom: 4, fontWeight: 500 }}>Invertido</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: C.slate }}>{USD(data.ethInvertidoUSD)}</div>
+                  <div style={{ fontSize: 11, color: C.slateM, marginTop: 2 }}>{Q(ethInvertidoGTQ)}</div>
+                </div>
+                <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px" }}>
+                  <div style={{ fontSize: 10, color: C.slateL, marginBottom: 4, fontWeight: 500 }}>Valor Actual</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: C.blueAcct }}>{USD(data.ethValorActualUSD)}</div>
+                  <div style={{ fontSize: 11, color: C.slateM, marginTop: 2 }}>{Q(ethValorGTQ)}</div>
+                </div>
+                <div style={{ background: ethGananciaPct >= 0 ? C.greenLt : C.redLt, border: `1px solid ${ethGananciaPct >= 0 ? C.green : C.red}33`, borderRadius: 8, padding: "12px" }}>
+                  <div style={{ fontSize: 10, color: C.slateL, marginBottom: 4, fontWeight: 500 }}>Ganancia / Pérdida</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: ethGananciaPct >= 0 ? C.green : C.red }}>{ethGananciaPct >= 0 ? "+" : ""}{USD(ethGananciaUSD)}</div>
+                  <div style={{ fontSize: 11, color: ethGananciaPct >= 0 ? C.green : C.red, marginTop: 2 }}>{ethGananciaPct >= 0 ? "+" : ""}{Q(ethGananciaGTQ)}</div>
+                </div>
+                <div style={{ background: ethGananciaPct >= 0 ? C.greenLt : C.redLt, border: `1px solid ${ethGananciaPct >= 0 ? C.green : C.red}33`, borderRadius: 8, padding: "12px" }}>
+                  <div style={{ fontSize: 10, color: C.slateL, marginBottom: 4, fontWeight: 500 }}>Rendimiento</div>
+                  <div style={{ fontSize: 24, fontWeight: 800, color: ethGananciaPct >= 0 ? C.green : C.red }}>{ethGananciaPct >= 0 ? "+" : ""}{ethGananciaPct.toFixed(1)}%</div>
+                </div>
+              </div>
+
+              {/* Barra visual ganancia */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span style={{ fontSize: 12, color: C.slateM }}>Capital base</span>
+                  <span style={{ fontSize: 12, color: C.slateM }}>Valor actual vs invertido</span>
+                </div>
+                <div style={{ height: 10, background: C.bg, borderRadius: 5, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${Math.min(100, (data.ethValorActualUSD / (data.ethInvertidoUSD * 2)) * 100)}%`, background: ethGananciaPct >= 0 ? C.green : C.red, borderRadius: 5, transition: "width 0.5s ease" }} />
+                </div>
+              </div>
+
+              <Div />
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(3,1fr)", gap: 10 }}>
+                <Row label="Tipo de cambio" value={`Q${data.tipoCambio} x $1`} />
+                <Row label="Valor en GTQ" value={Q(ethValorGTQ)} color={C.blueAcct} bold />
+                <Row label="Ganancia en GTQ" value={Q(ethGananciaGTQ)} color={ethGananciaPct >= 0 ? C.green : C.red} bold />
+              </div>
+            </Card>
+
+            {/* Info card */}
+            <div style={{ background: C.blueLt, border: `1px solid ${C.blueAcct}33`, borderRadius: 10, padding: "14px 16px", fontSize: 12, color: C.blueAcct, lineHeight: 1.7 }}>
+              <strong>ℹ Cómo actualizar:</strong> Cada semana cuando registres tus datos, actualiza el <strong>Valor actual en USD</strong> con el precio de mercado del Ethereum. El dashboard calcula automáticamente la conversión a Quetzales con el tipo de cambio que ingreses.
+            </div>
           </div>
         )}
 
