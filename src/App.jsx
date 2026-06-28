@@ -170,7 +170,7 @@ export default function App() {
     });
   },[history]);
 
-  const tabs=[["resumen","Resumen"],["liquidez","Liquidez"],["activos","Activos"],["cripto","Cripto"],["flujo","Flujo"],["historial","Historial"]];
+  const tabs=[["resumen","Resumen"],["patrimonio","Patrimonio"],["liquidez","Liquidez"],["activos","Activos"],["cripto","Cripto"],["flujo","Flujo"],["historial","Historial"]];
   const tcColor=tcUsoPct>70?C.red:tcUsoPct>40?C.orange:C.green;
   const col2={display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:14};
   const col3={display:"grid",gridTemplateColumns:isMobile?"1fr":isTablet?"1fr 1fr":"1fr 1fr 1fr",gap:14};
@@ -427,6 +427,154 @@ export default function App() {
                 ))}
               </div>
             </Card>
+          </div>
+        )}
+
+
+        {/* ── PATRIMONIO NETO ── */}
+        {tab==="patrimonio"&&(
+          <div style={{display:"grid",gap:14}}>
+
+            {/* Gran total */}
+            <div style={{background:"linear-gradient(135deg,#1e3a5f 0%,#1a4a8a 100%)",borderRadius:12,padding:"22px 24px",boxShadow:"0 4px 20px rgba(37,99,235,0.2)"}}>
+              <div style={{fontSize:11,color:"rgba(200,220,255,0.6)",letterSpacing:"2px",textTransform:"uppercase",marginBottom:6}}>Patrimonio Neto Total</div>
+              <div style={{fontSize:isMobile?32:44,fontWeight:800,color:"#ffffff",letterSpacing:"-1px",lineHeight:1}}>{Q(patrimonioNeto)}</div>
+              <div style={{fontSize:12,color:"rgba(200,220,255,0.5)",marginTop:8}}>Suma de todos tus activos menos deudas</div>
+            </div>
+
+            {/* Barra proporcional visual */}
+            <Card title="Composición del Patrimonio" icon="📊" accent={C.blueAcct}>
+              {(()=>{
+                const liquidezTotal = cajaNeta;
+                const activosTotal  = data.carroValorActual + equidadCasa;
+                const criptoTotal   = totalCriptoGTQ;
+                const total         = liquidezTotal + activosTotal + criptoTotal;
+                const pcts = [
+                  [liquidezTotal, C.blueAcct, "Liquidez"],
+                  [activosTotal,  C.green,    "Activos"],
+                  [criptoTotal,   "#7c3aed",  "Cripto"],
+                ];
+                return(
+                  <>
+                    <div style={{height:16,borderRadius:8,overflow:"hidden",display:"flex",gap:2,marginBottom:14}}>
+                      {pcts.map(([v,col,label],i)=>(
+                        <div key={i} style={{flex:Math.max(v,0),background:col,opacity:0.85,minWidth:v>0?4:0,borderRadius:i===0?"8px 0 0 8px":i===pcts.length-1?"0 8px 8px 0":"0"}}/>
+                      ))}
+                    </div>
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+                      {pcts.map(([v,col,label])=>(
+                        <div key={label} style={{textAlign:"center"}}>
+                          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:5,marginBottom:4}}>
+                            <div style={{width:10,height:10,borderRadius:2,background:col}}/>
+                            <span style={{fontSize:11,color:C.slateM}}>{label}</span>
+                          </div>
+                          <div style={{fontSize:13,fontWeight:700,color:col}}>{total>0?((v/total)*100).toFixed(1):0}%</div>
+                          <div style={{fontSize:11,color:C.slateM}}>{Qk(v)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                );
+              })()}
+            </Card>
+
+            {/* LIQUIDEZ */}
+            <Card title="💵 Liquidez" icon="" accent={C.blueAcct}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                <div>
+                  <div style={{fontSize:11,color:C.slateM,marginBottom:2}}>Total Liquidez</div>
+                  <div style={{fontSize:isMobile?22:28,fontWeight:800,color:C.blueAcct}}>{Q(cajaNeta)}</div>
+                </div>
+                <div style={{background:C.blueLt,borderRadius:8,padding:"8px 14px",textAlign:"right"}}>
+                  <div style={{fontSize:10,color:C.slateM}}>% del patrimonio</div>
+                  <div style={{fontSize:18,fontWeight:800,color:C.blueAcct}}>{patrimonioNeto>0?((cajaNeta/patrimonioNeto)*100).toFixed(1):0}%</div>
+                </div>
+              </div>
+              <div style={{display:"grid",gap:8}}>
+                <DetalleRow icon="💵" label="Cuenta Monetaria" value={Q(data.cuentaMonetaria)} color={C.blueAcct} pct={totalCajaBruta>0?((data.cuentaMonetaria/totalCajaBruta)*100).toFixed(0):0}/>
+                <DetalleRow icon="🏦" label="Cuenta de Ahorro" value={Q(data.cuentaAhorro)} color={C.blueAcct} pct={totalCajaBruta>0?((data.cuentaAhorro/totalCajaBruta)*100).toFixed(0):0}/>
+                <DetalleRow icon="⭐" label="Plan Dorado" value={Q(data.planDorado)} color={C.orange} pct={totalCajaBruta>0?((data.planDorado/totalCajaBruta)*100).toFixed(0):0}/>
+              </div>
+              <div style={{marginTop:10,padding:"10px 12px",background:C.redLt,border:"1px solid "+C.red+"33",borderRadius:8,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span style={{fontSize:12,color:C.red}}>— TC Gastado (pendiente pago)</span>
+                <span style={{fontSize:13,fontWeight:700,color:C.red}}>− {Q(data.tcGastado)}</span>
+              </div>
+            </Card>
+
+            {/* ACTIVOS */}
+            <Card title="🏠 Activos Físicos" icon="" accent={C.green}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                <div>
+                  <div style={{fontSize:11,color:C.slateM,marginBottom:2}}>Total Activos</div>
+                  <div style={{fontSize:isMobile?22:28,fontWeight:800,color:C.green}}>{Q(data.carroValorActual+equidadCasa)}</div>
+                </div>
+                <div style={{background:C.greenLt,borderRadius:8,padding:"8px 14px",textAlign:"right"}}>
+                  <div style={{fontSize:10,color:C.slateM}}>% del patrimonio</div>
+                  <div style={{fontSize:18,fontWeight:800,color:C.green}}>{patrimonioNeto>0?(((data.carroValorActual+equidadCasa)/patrimonioNeto)*100).toFixed(1):0}%</div>
+                </div>
+              </div>
+              <div style={{display:"grid",gap:8}}>
+                <DetalleRow icon="🚗" label="Vehículo (valor actual)" value={Q(data.carroValorActual)} color={C.green} sub={"Compra: "+Q(data.carroValorCompra)+" | Depreciación: "+carroDepreciacionPct.toFixed(1)+"%"}/>
+                <DetalleRow icon="🏠" label="Casa (valor mercado)" value={Q(data.casaValorActual)} color={C.green} sub={"Compra: "+Q(data.casaValorCompra)+" | Plusvalía: "+(casaPlusvalidPct>=0?"+":"")+casaPlusvalidPct.toFixed(1)+"%"}/>
+              </div>
+              <div style={{marginTop:10,padding:"10px 12px",background:C.redLt,border:"1px solid "+C.red+"33",borderRadius:8,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span style={{fontSize:12,color:C.red}}>— Deuda Casa (restante)</span>
+                <span style={{fontSize:13,fontWeight:700,color:C.red}}>− {Q(data.deudaCasa)}</span>
+              </div>
+              <div style={{marginTop:8,padding:"10px 12px",background:C.greenLt,border:"1px solid "+C.green+"33",borderRadius:8,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span style={{fontSize:12,color:C.green,fontWeight:600}}>Equidad neta en casa</span>
+                <span style={{fontSize:13,fontWeight:700,color:C.green}}>{Q(equidadCasa)}</span>
+              </div>
+            </Card>
+
+            {/* CRIPTO */}
+            <div style={{background:"linear-gradient(135deg,#0a0a18 0%,#0d1330 100%)",border:"1px solid rgba(124,58,237,0.3)",borderRadius:12,padding:"16px 18px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,paddingBottom:12,borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontSize:14}}>⟠</span>
+                  <span style={{fontSize:13,fontWeight:700,color:"rgba(200,220,255,0.8)"}}>Criptomonedas</span>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontSize:10,color:"rgba(180,180,255,0.4)"}}>% del patrimonio</div>
+                  <div style={{fontSize:18,fontWeight:800,color:"#a78bfa"}}>{patrimonioNeto>0?((totalCriptoGTQ/patrimonioNeto)*100).toFixed(1):0}%</div>
+                </div>
+              </div>
+              <div style={{marginBottom:8}}>
+                <div style={{fontSize:11,color:"rgba(150,200,255,0.5)",marginBottom:2}}>Total Cripto en GTQ</div>
+                <div style={{fontSize:isMobile?22:28,fontWeight:800,color:"#a78bfa"}}>{Q(totalCriptoGTQ)}</div>
+              </div>
+              <div style={{display:"grid",gap:8,marginTop:12}}>
+                {/* ETH row */}
+                <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(99,179,237,0.2)",borderRadius:8,padding:"10px 12px"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <span style={{fontSize:12}}>⟠</span>
+                      <span style={{fontSize:12,fontWeight:600,color:"#63b3ed"}}>Ethereum</span>
+                    </div>
+                    <span style={{fontSize:13,fontWeight:700,color:"#63b3ed"}}>{Q(ethValorGTQ)}</span>
+                  </div>
+                  <div style={{display:"flex",justifyContent:"space-between"}}>
+                    <span style={{fontSize:10,color:"rgba(150,200,255,0.5)"}}>Invertido: {USD(data.ethInvertidoUSD)} | Actual: {USD(data.ethValorActualUSD)}</span>
+                    <span style={{fontSize:10,fontWeight:600,color:ethGananciaPct>=0?"#4ade80":"#f87171"}}>{ethGananciaPct>=0?"+":""}{ethGananciaPct.toFixed(1)}%</span>
+                  </div>
+                </div>
+                {/* SOL row */}
+                <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(153,69,255,0.2)",borderRadius:8,padding:"10px 12px"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <span style={{fontSize:12}}>◎</span>
+                      <span style={{fontSize:12,fontWeight:600,color:"#9945ff"}}>Solana</span>
+                    </div>
+                    <span style={{fontSize:13,fontWeight:700,color:"#9945ff"}}>{Q(solValorGTQ)}</span>
+                  </div>
+                  <div style={{display:"flex",justifyContent:"space-between"}}>
+                    <span style={{fontSize:10,color:"rgba(180,150,255,0.5)"}}>Invertido: {USD(data.solInvertidoUSD)} | Actual: {USD(data.solValorActualUSD)}</span>
+                    <span style={{fontSize:10,fontWeight:600,color:solGananciaPct>=0?"#4ade80":"#f87171"}}>{solGananciaPct>=0?"+":""}{solGananciaPct.toFixed(1)}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
 
@@ -716,7 +864,7 @@ export default function App() {
         <div style={{position:"fixed",bottom:0,left:0,right:0,background:C.white,borderTop:`1px solid ${C.border}`,display:"flex",boxShadow:"0 -2px 10px rgba(0,0,0,0.08)",zIndex:40}}>
           {tabs.map(([id,label])=>(
             <button key={id} onClick={()=>setTab(id)} style={{flex:1,padding:"8px 2px 6px",border:"none",background:"transparent",color:tab===id?C.blueAcct:C.slateL,fontSize:9,fontFamily:"inherit",fontWeight:tab===id?700:400,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,borderTop:`2px solid ${tab===id?C.blueAcct:"transparent"}`}}>
-              <span style={{fontSize:15}}>{id==="resumen"?"📊":id==="liquidez"?"💵":id==="activos"?"🏠":id==="cripto"?"⟠":id==="flujo"?"📤":"🕐"}</span>
+              <span style={{fontSize:15}}>{id==="resumen"?"📊":id==="patrimonio"?"💎":id==="liquidez"?"💵":id==="activos"?"🏠":id==="cripto"?"⟠":id==="flujo"?"📤":"🕐"}</span>
               <span>{label}</span>
             </button>
           ))}
@@ -838,6 +986,24 @@ function MiniChart({data,color=C.blueAcct}){
         <span style={{fontSize:11,color:C.slateM}}>Máx: <span style={{color:C.green,fontWeight:600}}>{Q(Math.max(...vals))}</span></span>
         <span style={{fontSize:11,color:C.slateM}}>Último: <span style={{color,fontWeight:600}}>{Q(vals[vals.length-1])}</span></span>
       </div>
+    </div>
+  );
+}
+
+function DetalleRow({icon, label, value, color, pct, sub}) {
+  return(
+    <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:8,padding:"10px 12px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:sub?4:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          <span style={{fontSize:13}}>{icon}</span>
+          <span style={{fontSize:12,fontWeight:600,color:C.slate}}>{label}</span>
+        </div>
+        <div style={{textAlign:"right"}}>
+          <div style={{fontSize:13,fontWeight:700,color}}>{value}</div>
+          {pct&&<div style={{fontSize:10,color:C.slateL}}>{pct}% de caja</div>}
+        </div>
+      </div>
+      {sub&&<div style={{fontSize:10,color:C.slateM,marginTop:2,paddingLeft:20}}>{sub}</div>}
     </div>
   );
 }
